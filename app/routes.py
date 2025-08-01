@@ -13,6 +13,9 @@ main = Blueprint('main', __name__)
 # Helper function to check allowed file types
 def allowed_file(filename):
     """Check if uploaded file type is allowed"""
+    # rsplit(): Start split from the RIGHT of the string
+    # split(): Start split from the LEFT
+    # params: character to split, maximum time of splitting (1 means only split 1 time)
     return '.' in filename and \
         filename.rsplit('.', 1)[1].lower() in current_app.config['ALLOWED_EXTENSIONS']
 
