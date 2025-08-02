@@ -1,25 +1,38 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Chatbot</title>
-    <script>
-        async function sendMessage() {
-            const message = document.getElementById('message').value;
-            const response = await fetch('/chat', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ message })
-            });
-            const data = await response.json();
-            document.getElementById('response').innerText = data.response;
-        }
-    </script>
-</head>
-<body>
-    <h1>Chatbot</h1>
-    <input id="message" placeholder="Say something..." />
-    <button onclick="sendMessage()">Send</button>
-    <p><strong>Bot:</strong> <span id="response"></span></p>
-</body>
-</html>
+{% extends "base.html" %}
+
+{% block title %}Home - File Manager{% endblock %}
+
+{% block content %}
+    <div class="welcome-section">
+        <h1>Welcome to File Manager</h1>
+        <p class="subtitle">A simple Flask application for uploading and managing your documents</p>
+    </div>
+
+    <div class="features">
+        <div class="feature-card">
+            <h3>📄 Upload Files</h3>
+            <p>Upload PDF, Excel, and Word documents safely to your local storage</p>
+            <a href="{{ url_for('main.upload') }}" class="btn">Start Uploading</a>
+        </div>
+
+        <div class="feature-card">
+            <h3>📂 Manage Files</h3>
+            <p>View, download, and organize all your uploaded documents in one place</p>
+            <a href="{{ url_for('main.files') }}" class="btn">View Files</a>
+        </div>
+
+        <div class="feature-card">
+            <h3>🔒 Secure Storage</h3>
+            <p>Files are stored locally on your MacOS with proper organization by file type</p>
+        </div>
+    </div>
+
+    <div class="quick-stats">
+        <h2>Supported File Types</h2>
+        <ul class="file-types">
+            <li>📄 PDF Documents</li>
+            <li>📊 Excel Files (.xlsx, .xls)</li>
+            <li>📝 Word Documents (.docx)</li>
+        </ul>
+    </div>
+{% endblock %}

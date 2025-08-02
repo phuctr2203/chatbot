@@ -1,0 +1,169 @@
+{% extends "base.html" %}
+
+{% block title %}Upload Files - File Manager{% endblock %}
+
+{% block content %}
+    <div class="upload-section">
+        <h1>Upload Your Files</h1>
+        <p class="subtitle">Select and upload your PDF, Excel, or Word documents</p>
+    </div>
+
+    <div class="upload-container">
+        <form id="uploadForm" method="POST" enctype="multipart/form-data">
+            <div class="upload-area">
+                <div class="upload-icon">📁</div>
+                <h3>Choose Files to Upload</h3>
+                <p>Drag and drop files here or click to browse</p>
+                
+                <input type="file" 
+                       name="uploaded_file" 
+                       id="fileInput" 
+                       accept=".pdf,.xlsx,.xls,.docx"
+                       multiple
+                       required>
+                
+                <label for="fileInput" class="file-label">
+                    Select Files
+                </label>
+            </div>
+
+            <div class="file-info">
+                <h4>Supported File Types:</h4>
+                <ul class="supported-types">
+                    <li>📄 PDF Documents (.pdf)</li>
+                    <li>📊 Excel Spreadsheets (.xlsx, .xls)</li>
+                    <li>📝 Word Documents (.docx)</li>
+                </ul>
+                
+                <p class="file-limit">Maximum file size: 16 MB per file</p>
+            </div>
+
+            <div class="selected-files" id="selectedFiles" style="display: none;">
+                <h4>Selected Files:</h4>
+                <ul id="fileList"></ul>
+            </div>
+
+            <div class="upload-actions">
+                <button type="submit" class="btn btn-primary" id="uploadBtn" disabled>
+                    Upload Files
+                </button>
+                <button type="button" class="btn btn-secondary" onclick="clearFiles()">
+                    Clear Selection
+                </button>
+            </div>
+        </form>
+
+        <div class="upload-status" id="uploadStatus" style="display: none;">
+            <div class="status-message" id="statusMessage"></div>
+        </div>
+    </div>
+
+    <script>
+        // JavaScript for file upload handling
+        const fileInput = document.getElementById('fileInput');
+        const uploadBtn = document.getElementById('uploadBtn');
+        const selectedFiles = document.getElementById('selectedFiles');
+        const fileList = document.getElementById('fileList');
+        const uploadForm = document.getElementById('uploadForm');
+        const uploadStatus = document.getElementById('uploadStatus');
+        const statusMessage = document.getElementById('statusMessage');
+
+        // Handle file selection
+        fileInput.addEventListener('change', function(e) {
+            const files = e.target.files;
+            if (files.length > 0) {
+                displaySelectedFiles(files);
+                uploadBtn.disabled = false;
+                selectedFiles.style.display = 'block';
+            } else {
+                uploadBtn.disabled = true;
+                selectedFiles.style.display = 'none';
+            }
+        });
+
+        // Display selected files
+        function displaySelectedFiles(files) {
+            fileList.innerHTML = '';
+            for (let i = 0; i < files.length; i++) {
+                const file = files[i];
+                const li = document.createElement('li');
+                li.innerHTML = `
+                    <span class="file-name">${file.name}</span>
+                    <span class="file-size">(${formatFileSize(file.size)})</span>
+                `;
+                fileList.appendChild(li);
+            }
+        }
+
+        // Format file size
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
+        // Clear file selection
+        function clearFiles() {
+            fileInput.value = '';
+            uploadBtn.disabled = true;
+            selectedFiles.style.display = 'none';
+            fileList.innerHTML = '';
+        }
+
+        // Handle form submission
+        uploadForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData();
+            const files = fileInput.files;
+            
+            // Add all selected files to FormData
+            for (let i = 0; i < files.length; i++) {
+                formData.append('uploaded_files', files[i]);
+            }
+
+            // Show uploading status
+            showStatus('Uploading files...', 'info');
+            uploadBtn.disabled = true;
+            uploadBtn.textContent = 'Uploading...';
+
+            // Send files to server
+            fetch('{{ url_for("main.upload") }}', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    showStatus(data.message, 'success');
+                    clearFiles();
+                } else {
+                    showStatus(data.message, 'error');
+                }
+            })
+            .catch(error => {
+                showStatus('Upload failed: ' + error.message, 'error');
+            })
+            .finally(() => {
+                uploadBtn.disabled = false;
+                uploadBtn.textContent = 'Upload Files';
+            });
+        });
+
+        // Show status message
+        function showStatus(message, type) {
+            statusMessage.textContent = message;
+            statusMessage.className = 'status-message ' + type;
+            uploadStatus.style.display = 'block';
+            
+            // Hide status after 5 seconds for success messages
+            if (type === 'success') {
+                setTimeout(() => {
+                    uploadStatus.style.display = 'none';
+                }, 5000);
+            }
+        }
+    </script>
+{% endblock %}
